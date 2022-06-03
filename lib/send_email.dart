@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Estudiante {
   String cedula = '';
@@ -114,7 +115,12 @@ class _SendEmailState extends State<SendEmail> {
 
   final List<dynamic> _listaSelecionada = cargarFichero();
 
-  var emailControler = TextEditingController();
+  final emailControler = TextEditingController();
+
+  String asunto = 'Resgistros de Calificaciones de INF-5180 ';
+
+  String cuerpoDelMensaje =
+      'Registros de Calificaciones de los Estudiantes de Programación 4\n\n';
 
   @override
   void initState() {
@@ -181,6 +187,18 @@ class _SendEmailState extends State<SendEmail> {
       setState(() {
         jsonEstudiantes = value;
       });
+
+      for (var i = 0; i < _listaSelecionada.length; i++) {
+        cuerpoDelMensaje += 'Nombre: ' +
+            _listaSelecionada[i].nombres +
+            "\n" +
+            'Cédula: ' +
+            _listaSelecionada[i].cedula +
+            "\n" +
+            'Calificación: ' +
+            _listaSelecionada[i].calificacion +
+            "\n\n";
+      }
 
       for (var i = 0; i < _listaSelecionada.length; i++) {
         adds.add(
@@ -274,8 +292,12 @@ class _SendEmailState extends State<SendEmail> {
                             Container(
                               margin: const EdgeInsets.all(10),
                               child: ElevatedButton(
-                                onPressed: () {},
                                 child: const Text('Enviar'),
+                                onPressed: () => launchEmail(
+                                  toEmail: emailControler.text,
+                                  subject: asunto,
+                                  massage: cuerpoDelMensaje,
+                                ),
                               ),
                             ),
                           ]),
@@ -300,5 +322,17 @@ class _SendEmailState extends State<SendEmail> {
         ),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  Future launchEmail({
+    required String toEmail,
+    required String subject,
+    required String massage,
+  }) async {
+    Uri url = Uri.parse('mailto:$toEmail?subject=$subject&body=$massage');
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    }
   }
 }
